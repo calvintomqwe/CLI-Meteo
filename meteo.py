@@ -1,4 +1,5 @@
 import requests
+import csv
 import json
 
 # requête API pour récupérer les données météo
@@ -77,8 +78,46 @@ def afficher_meteo(ville):
         print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
 
 
+# Afficher et enregistrer le résultat sous forme CSV
+def afficher_meteo_csv(ville):
+    data = get_meteo(ville)
+    
+    if data:
+        file_name = f"{ville}_meteo.csv"
+        with open(file_name, mode='w', newline='', encoding='utf-8') as file:
+            writer = csv.writer(file)
+            
+            # Ecrire les en-têtes
+            writer.writerow(["Ville", "Description", "Température (°C)", "Humidité (%)", "Vitesse du vent (km/h)", "Direction du vent"])
+            
+            # ecrire les données
+            writer.writerow([
+                ville,
+                get_weather_description(ville),
+                get_temperature(ville),
+                get_humidity(ville),
+                get_wind_speed(ville),
+                get_wind_direction(ville)
+            ])
+        
+        print(f"Les données météo pour {ville} ont été sauvegardées dans le fichier {file_name}.")
+    else:
+        print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
+
+
+def afficher_avignon_en_gros():
+    print("""
+     A     V     V  I  GGGGG  N   N  OOO   N   N
+    A A     V   V   I  G      NN  N O   O  NN  N
+   AAAAA     V V    I  G  GG  N N N O   O  N N N
+  A     A     V     I  G   G  N  NN O   O  N  NN
+ A       A    V     I   GGGG  N   N  OOO   N   N
+    """)
+
+
 def cli_interactif():
     ville_defaut = "Avignon"
+    afficher_avignon_en_gros()
     print(f"Bienvenue dans l'application météo CLI (ville par défaut : {ville_defaut}).")
     
     while True:
@@ -92,6 +131,8 @@ def cli_interactif():
             ville = ville_defaut
         
         afficher_meteo(ville)
+        afficher_meteo_csv(ville)
+
 
 
 if __name__ == "__main__":
