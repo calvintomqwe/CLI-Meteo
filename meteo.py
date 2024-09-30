@@ -44,7 +44,7 @@ def get_meteo_gps(lat, lon):
 
 
 # Afficher 
-def afficher_meteo(ville):
+def afficher_meteo_A(ville):
     data = get_meteo(ville)
 
     if data:
@@ -54,19 +54,18 @@ def afficher_meteo(ville):
         humidite = data["main"]["humidity"]
         vitesseVent = data["wind"]["speed"]
         directionVent = data["wind"]["deg"]
+
+        #retourner un tableau avec les informations météo
+        meteo = [ville, informationGenerale, temperature, humidite, vitesseVent, directionVent]
+        return meteo
     
-        print(f"\nInformation météo pour {ville}:")
-        print(f"Description : {informationGenerale}")
-        print(f"Température : {temperature} °C")
-        print(f"Humidité : {humidite} %")
-        print(f"Vitesse du vent : {vitesseVent} km/h")
-        print(f"Direction du vent : {directionVent}\n")
     else:
         print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
+        return None
 
 # Afficher la météo avec les coordonnées GPS
 
-def afficher_meteo_gps(lat, lon):
+def afficher_meteo_gps_A(lat, lon):
     data = get_meteo_gps(lat, lon)
     
     if data:
@@ -76,16 +75,14 @@ def afficher_meteo_gps(lat, lon):
         vitesseVent = data["wind"]["speed"]
         directionVent = data["wind"]["deg"]
         nomVille = data["name"]
-        
-        print(f"\nInformation météo pour la position ({lat}, {lon}):")
-        print(f"Ville : {nomVille}")
-        print(f"Description : {informationGenerale}")
-        print(f"Température : {temperature} °C")
-        print(f"Humidité : {humidite} %")
-        print(f"Vitesse du vent : {vitesseVent} km/h")
-        print(f"Direction du vent : {directionVent}\n")
+
+        #retourner un tableau avec les informations météo
+        meteo = [nomVille, informationGenerale, temperature, humidite, vitesseVent, directionVent]
+        return meteo
+
     else:
         print(f"Les données météo pour la position ({lat}, {lon}) ne sont pas disponibles. Veuillez vérifier les coordonnées GPS.")
+        return None
 
 def cli_interactif():
     ville_defaut = "Avignon"
@@ -104,13 +101,34 @@ def cli_interactif():
             if ville.strip() == "":
                 ville = ville_defaut
             
-            afficher_meteo(ville)
+            #tableau avec les informations météo et afficher le tableau
+            meteo = afficher_meteo(ville)
+            if meteo:
+                print(f"\nMétéo à {meteo[0]} :")
+                print(f"Description : {meteo[1]}")
+                print(f"Température : {meteo[2]} °C")
+                print(f"Hygrométrie : {meteo[3]} %")
+                print(f"Vitesse du vent : {meteo[4]} m/s")
+                print(f"Direction du vent : {meteo[5]} °\n")
+            else:
+                print("Les données météo ne sont pas disponibles.")
+            
         
         elif choix == '2':
             lat = input("Entrez la latitude : ")
             lon = input("Entrez la longitude : ")
             
-            afficher_meteo_gps(lat, lon)
+            #tableau avec les informations météo et afficher le tableau
+            meteo = afficher_meteo_gps(lat, lon)
+            if meteo:
+                print(f"\nMétéo à {meteo[0]} :")
+                print(f"Description : {meteo[1]}")
+                print(f"Température : {meteo[2]} °C")
+                print(f"Hygrométrie : {meteo[3]} %")
+                print(f"Vitesse du vent : {meteo[4]} m/s")
+                print(f"Direction du vent : {meteo[5]} °\n")
+            else:
+                print("Les données météo ne sont pas disponibles.")
         
         else:
             print("Choix invalide. Veuillez réessayer.")
