@@ -83,6 +83,22 @@ def afficher_meteo_gps_A(lat, lon):
     else:
         print(f"Les données météo pour la position ({lat}, {lon}) ne sont pas disponibles. Veuillez vérifier les coordonnées GPS.")
         return None
+    
+# fonction pour changer la ville par default en stockant dans un fichier
+
+def changer_ville_defaut(ville):
+    with open("ville_defaut.txt", "w") as f:
+        f.write(ville)
+    
+# fonction pour lire la ville par default dans le fichier
+
+def lire_ville_defaut():
+    try:
+        with open("ville_defaut.txt", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
+
 
 def cli_interactif():
     ville_defaut = "Avignon"
