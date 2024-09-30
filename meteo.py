@@ -1,4 +1,5 @@
 import requests
+import sys
 import json
 
 # requête API pour récupérer les données météo
@@ -94,5 +95,61 @@ def cli_interactif():
         afficher_meteo(ville)
 
 
+def traiter_arguments():
+    args = sys.argv[1:]
+    villes = []
+    i = 0
+
+    while i < len(args):
+        if args[i] == '-v':
+            ville_info = [None, None, None, None, 'v']
+            ville_info[0] = args[i + 1]
+            i += 2
+
+            if i < len(args) and args[i] == '-d':
+                ville_info[1] = args[i + 1]
+                i += 2
+
+            elif i < len(args) and args[i] == '-p':
+                ville_info[2] = args[i + 1]
+                ville_info[3] = args[i + 2]
+                i += 3
+
+            villes.append(ville_info)
+        elif args[i] == "-c":
+            ville_info = [None, None, None, None, 'c']
+            ville_info[0] = args[i + 1]
+            i += 2
+
+            if i < len(args) and args[i] == '-d':
+                ville_info[1] = args[i + 1]
+                i += 2
+
+            elif i < len(args) and args[i] == '-p':
+                ville_info[2] = args[i + 1]
+                ville_info[3] = args[i + 2]
+                i += 3
+
+            villes.append(ville_info)
+        else:
+            i += 1
+
+    return villes
+
 if __name__ == "__main__":
-    cli_interactif()
+    villes = traiter_arguments()
+
+    for ville_info in villes:
+        ville = ville_info[0]
+        date = ville_info[1] if ville_info[1] else "Non spécifiée"
+        plage_debut = ville_info[2] if ville_info[2] else "Non spécifiée"
+        plage_fin = ville_info[3] if ville_info[3] else "Non spécifiée"
+        
+        #if ville_info[1]:
+        #    print(f"Ville : {ville}, Date : {date}")
+        #elif ville_info[2] and ville_info[3]:
+        #    print(f"Ville : {ville}, Plage de temps : {plage_debut} - {plage_fin}")
+        #else:
+        #    print(f"Ville : {ville}, Date et Plage de temps : Non spécifiées")
+
+        afficher_meteo(ville_info[0])
