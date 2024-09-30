@@ -1,98 +1,145 @@
 import requests
 import json
 
+
 # requête API pour récupérer les données météo
 def get_meteo(ville=None):
     api_key = "657d085c1641acc8912db3f95ecd21b3"
     url = f"http://api.openweathermap.org/data/2.5/weather?q={ville}&units=metric&lang=fr&appid={api_key}"
-    
+
     try:
         response = requests.get(url)
         response.raise_for_status()  # vérifie si la requête a échoué
         data = response.json()
-        
+
         if data.get('cod') != 200:
-            print(f"Erreur : {data.get('message', 'Données météo non disponibles')}.")
+            print(
+                f"Erreur : {data.get('message', 'Données météo non disponibles')}."
+            )
             return None
-            
+
         return data
     except requests.exceptions.RequestException:
         print("Erreur : Impossible de récupérer les données météo.")
         return None
 
 
-# Fonctions pour récupérer les données météo
+# requete API pour récupérer les données météo avec coordonnées GPS
+def get_meteo_gps(lat, lon):
+    api_key = "657d085c1641acc8912db3f95ecd21b3"
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&lang=fr&appid={api_key}"
 
-# Récupérer la température
-def get_temperature(ville=None):
-    data = get_meteo(ville)
-    if data:
-        return data["main"]["temp"]
-    return "Données indisponibles"
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # vérifie si la requête a échoué
+        data = response.json()
 
-# Récupérer l'humidité
-def get_humidity(ville=None):
-    data = get_meteo(ville)
-    if data:
-        return data["main"]["humidity"]
-    return "Données indisponibles"
+        if data.get('cod') != 200:
+            print(
+                f"Erreur : {data.get('message', 'Données météo non disponibles')}."
+            )
+            return None
 
-# Récupérer la vitesse du vent
-def get_wind_speed(ville=None):
-    data = get_meteo(ville)
-    if data:
-        wind_speed = data["wind"]["speed"]
-        return wind_speed * 3.6  # convertir de m/s à km/h
-    return "Données indisponibles"
+        return data
+    except requests.exceptions.RequestException:
+        print("Erreur : Impossible de récupérer les données météo.")
+        return None
 
-# Récupérer la direction du vent
-def get_wind_direction(ville=None):
-    data = get_meteo(ville)
-    if data:
-        degrees = data["wind"]["deg"]
-        directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'N']
-        index = round(degrees / 45) # arrondir à la direction la plus proche
-        return directions[index]
-    return "Données indisponibles"
 
-# Récupérer la description 
-def get_weather_description(ville=None):
-    data = get_meteo(ville)
-    if data:
-        return data["weather"][0]["description"]
-    return "Données indisponibles"
-
-# Afficher 
+# Afficher
 def afficher_meteo(ville):
     data = get_meteo(ville)
-    
+
     if data:
+        informationGenerale = data["main"]["temp"]
+        description = data["weather"][0]["description"]
+        temperature = data["main"]["temp"]
+        humidite = data["main"]["humidity"]
+        vitesseVent = data["wind"]["speed"]
+        directionVent = data["wind"]["deg"]
+
         print(f"\nInformation météo pour {ville}:")
-        print(f"Description : {get_weather_description(ville)}")
-        print(f"Température : {get_temperature(ville)} °C")
-        print(f"Humidité : {get_humidity(ville)} %")
-        print(f"Vitesse du vent : {get_wind_speed(ville)} km/h")
-        print(f"Direction du vent : {get_wind_direction(ville)}\n")
+        print(f"Description : {informationGenerale}")
+        print(f"Température : {temperature} °C")
+        print(f"Humidité : {humidite} %")
+        print(f"Vitesse du vent : {vitesseVent} km/h")
+        print(f"Direction du vent : {directionVent}\n")
     else:
-        print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
+        print(
+            f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville."
+        )
 
 
-def cli_interactif():
-    ville_defaut = "Avignon"
-    print(f"Bienvenue dans l'application météo CLI (ville par défaut : {ville_defaut}).")
-    
-    while True:
-        ville = input("Entrez le nom de la ville (ou appuyez sur Entrée pour utiliser la ville par défaut, ou tapez 'q' pour quitter) : ")
-        
-        if ville.lower() == 'q':
-            print("Au revoir !")
-            break
-        
-        if ville.strip() == "":
-            ville = ville_defaut
-        
-        afficher_meteo(ville)
+# Afficher la météo avec les coordonnées GPS
+def afficher_meteo_gps(lat, lon):
+    data = get_meteo_gps(lat, lon)
+
+    if data:
+        informationGenerale = data["weather"][0]["description"]
+        temperature = data["main"]["temp"]
+        humidite = data["main"]["humidity"]
+        vitesseVent = data["wind"]["speed"]
+        directionVent = data["wind"]["deg"]
+        nomVille = data["name"]
+
+        print(f"\nInformation météo pour la position ({lat}, {lon}):")
+        print(f"Ville : {nomVille}")
+        print(f"Description : {informationGenerale}")
+        print(f"Température : {temperature} °C")
+        print(f"Humidité : {humidite} %")
+        print(f"Vitesse du vent : {vitesseVent} km/h")
+        print(f"Direction du vent : {directionVent}\n")
+    else:
+        print(
+            f"Les données météo pour la position ({lat}, {lon}) ne sont pas disponibles. Veuillez vérifier les coordonnées GPS."
+        )
+
+def afficher_meteo_date(ville, date):
+    print(f"Affichage des données météo pour {ville} à la date {date}")
+
+
+
+def main():
+
+    choix = input(
+        "Voulez-vous entrer des noms de villes ou des coordonnées GPS ? (villes/coordonnées) : "
+    ).strip().lower()
+
+    if choix == "villes":
+        # Entrée de tableau de villes avec potentiellement des dates
+        villes_tableau = [
+            ["Montcuq", None, None, None],
+            ["Lyon", "2023-09-20", None, None],
+            ["Marseille", "2023-09-15", "2023-09-16", None]
+        ]
+
+        for ville_data in villes_tableau:
+            nom_ville = ville_data[0]
+            dates = ville_data[1:4]
+
+            if all(date is None for date in dates):  # Si toutes les dates sont None, appeler afficher_meteo
+                afficher_meteo(nom_ville)
+            else:  # Sinon, appeler afficher_meteo_date pour les dates non nulles
+                for date in dates:
+                    if date is not None:
+                        afficher_meteo_date(nom_ville, date)
+
+    elif choix == "coordonnées":
+        coords_input = input(
+            "Entrez les coordonnées GPS (lat,lon), séparées par des virgules : "
+        )
+        coords = [
+            tuple(map(float,
+                      coord.strip().split(',')))
+            for coord in coords_input.split(',')
+        ] if coords_input else []
+
+        for lat, lon in coords:
+            afficher_meteo_gps(lat, lon)
+
+    else:
+        print("Choix invalide. Veuillez entrer 'villes' ou 'coordonnées'.")
 
 
 if __name__ == "__main__":
-    cli_interactif()
+    main()
