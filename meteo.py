@@ -73,7 +73,7 @@ def get_meteo_by_date(ville=None, date_str=None):
     return "Aucune prévision trouvée pour cette date à 12h."
 
 # Fonction pour afficher la météo actuelle ou à une date spécifique
-def afficher_meteo(ville, date_str=None):
+def afficher_meteo_si_date(ville, date_str=None):
     if date_str:
         forecast = get_meteo_by_date(ville, date_str)
         if isinstance(forecast, dict):
@@ -118,7 +118,7 @@ def main():
         ville = args[0]
     
     # Afficher la météo (actuelle ou prévisions selon le cas)
-    afficher_meteo(ville, date_str)
+    afficher_meteo_si_date(ville, date_str)
 
 if __name__ == "__main__":
     main()
