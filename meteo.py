@@ -83,6 +83,21 @@ def afficher_meteo_gps_A(lat, lon):
 
     else:
         return "Les données météo pour la position (" + lat + "," + lon + ") ne sont pas disponibles. Veuillez vérifier les coordonnées GPS."
+    
+# fonction pour changer la ville par default en stockant dans un fichier
+
+def changer_ville_defaut(ville):
+    with open("ville_defaut.txt", "w") as f:
+        f.write(ville)
+    
+# fonction pour lire la ville par default dans le fichier
+
+def lire_ville_defaut():
+    try:
+        with open("ville_defaut.txt", "r") as f:
+            return f.read()
+    except FileNotFoundError:
+        return None
 
 
 # Afficher et enregistrer le résultat sous forme CSV
@@ -172,6 +187,56 @@ def get_meteo_by_date(ville=None, date_str=None):
     
     return "Aucune prévision trouvée pour "+ ville + " le " + date_str
 
+# Fonction pour obtenir les prévisions à 5 jours
+def get_forecast_coord(lat=None,long=None):
+    api_key = "657d085c1641acc8912db3f95ecd21b3"
+    url = f"http://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={long}&units=metric&lang=fr&appid={api_key}"
+    
+    try:
+        response = requests.get(url)
+        response.raise_for_status()
+        data = response.json()
+        
+        if data.get('cod') != "200":
+            return "Erreur : {data.get('message', 'Données météo non disponibles')}."
+        
+        # Créer un tableau avec les prévisions
+        forecast_list = []
+        for forecast in data['list']:
+            forecast_info = {
+                'name': lat+":"+long,
+                'date': forecast['dt_txt'],
+                'temperature': forecast['main']['temp'],
+                'humidity': forecast['main']['humidity'],
+                'wind_speed': forecast['wind']['speed'] * 3.6,  # conversion en km/h
+                'description': forecast['weather'][0]['description']
+            }
+            forecast_list.append(forecast_info)
+        
+        return forecast_list
+    except requests.exceptions.RequestException:
+        return "Erreur : Impossible de récupérer les données météo."
+
+# Fonction pour obtenir la météo à une date spécifique (à 12h)
+def get_meteo_by_coord_by_date(lat=None,long=None, date_str=None):
+    data = get_forecast_coord(lat,long)
+    if not data:
+        return "Données indisponibles"
+
+    # Convertir la date fournie en objet datetime
+    try:
+        date_obj = datetime.strptime(date_str, "%Y-%m-%d").date()
+    except ValueError:
+        return "Format de date invalide. Utilisez 'AAAA-MM-JJ'."
+
+    # Chercher la prévision à 12h pour cette date
+    for forecast in data:
+        forecast_date = datetime.strptime(forecast['date'], "%Y-%m-%d %H:%M:%S")
+        if forecast_date.date() == date_obj and forecast_date.hour == 12:
+            return [forecast]  # Renvoie la prévision correspondante à 12h
+    
+    return "Aucune prévision trouvée pour "+ lat+":"+long + " le " + date_str
+
 # Fonction pour afficher la météo actuelle ou à une date spécifique
 def transfo_meteo_si_date(date, forecast):
     if isinstance(forecast, str):
@@ -221,7 +286,18 @@ def traitement(villes_tableau):
         elif(ville_data[4] == 'c'):
             coord = ville_data[0].split(':')
             if len(coord) == 2 and coord[0] and coord[1]:
-                returnTab.append(afficher_meteo_gps_A(coord[0], coord[1]))
+                nom_ville = ville_data[0]
+                dates = ville_data[1:4]
+                if all(date is None for date in dates):
+                    returnTab.append(afficher_meteo_gps_A(coord[0], coord[1]))
+                elif(dates[0] is not None):
+                    returnTab.append(transfo_meteo_si_date(dates[0], get_meteo_by_coord_by_date(coord[0], coord[1], dates[0])))
+                elif(dates[1] is not None and dates[2] is not None):
+                    liste = liste_dates(dates[1],dates[2])
+                    for date in liste:
+                        returnTab.append(transfo_meteo_si_date(date, get_meteo_by_coord_by_date(coord[0], coord[1], date)))
+                else:
+                    print("error")
             else:
                 print(ville_data[0] + " n'est pas une coordonnée valide essayer le format lat:long")
         else:
@@ -241,9 +317,23 @@ def afficher_aide():
 def traiter_arguments():
     args = sys.argv[1:]
     villes = []
+    #       [default,temp,hum,wind]
+    param = [False,False,False,False]
     i = 0
-
+    if len(args) == 0:
+        villes.append([lire_ville_defaut(),None,None,None,'v'])
     while i < len(args):
+        if args[i] == '-temp':
+            if param[0] == False: param[0] = True
+            param[1] = True
+        if args[i] == '-hum':
+            if param[0] == False: param[0] = True
+            param[2] = True
+        if args[i] == '-wind':
+            if param[0] == False: param[0] = True
+            param[3] = True
+        if args[i] == '-default':
+            changer_ville_defaut(args[i + 1])
         if args[i] == '-help':
             afficher_aide()
         if args[i] == '-v':
@@ -279,10 +369,10 @@ def traiter_arguments():
         else:
             i += 1
 
-    return villes
+    return villes, param
 
 if __name__ == "__main__":
-    villes = traiter_arguments()
+    villes, param = traiter_arguments()
     tab = traitement(villes)
     for info in tab:
         if isinstance(info, str):
@@ -292,6 +382,9 @@ if __name__ == "__main__":
                 print(f"\nMétéo actuelle pour {info[0]} aujourd'hui:")
             else:
                 print(f"\nMétéo actuelle pour {info[0]} le {info[1]}:")
-            print(f"Température : {info[2]} °C")
-            print(f"Humidité : {info[3]} %")
-            print(f"Vitesse du vent : {info[4]} m/h")
+            if(param[0] == False or param[1] == True):
+                print(f"Température : {info[2]} °C")
+            if(param[0] == False or param[2] == True):
+                print(f"Humidité : {info[3]} %")
+            if(param[0] == False or param[3] == True):
+                print(f"Vitesse du vent : {info[4]} m/h")
