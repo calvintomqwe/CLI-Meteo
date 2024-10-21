@@ -1,6 +1,7 @@
 import requests
 import sys
 import json
+import csv
 from datetime import datetime, timedelta
 
 # requête API pour récupérer les données météo
@@ -101,31 +102,39 @@ def lire_ville_defaut():
 
 
 # Afficher et enregistrer le résultat sous forme CSV
-def afficher_meteo_csv(ville):
-    data = afficher_meteo_A(ville)
-    
-    if data:
-        file_name = f"{ville}_meteo.csv"
-        with open(file_name, mode='w', newline='', encoding='utf-8') as file:
-            writer = csv.writer(file)
-            
-            # Ecrire les en-têtes
-            writer.writerow(["Ville", "Description", "Température (°C)", "Humidité (%)", "Vitesse du vent (km/h)", "Direction du vent"])
-            
-            # ecrire les données
-            writer.writerow([
-                ville,
-                data[1],
-                data[2],
-                data[3],
-                data[4],
-                data[5]
-            ])
+def afficher_meteo_csv(ville, options):   
+    file_name = f"meteo.csv"
+    with open(file_name, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
         
-        print(f"Les données météo pour {ville} ont été sauvegardées dans le fichier {file_name}.")
-    else:
-        print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
+        # Créer dynamiquement les en-têtes en fonction des options
+        headers = ["Ville", "Date"]
+        if param[0]:
+            headers.append("Température (°C)")
+        if param[1]:
+            headers.append("Humidité (%)")
+        if param[2]:
+            headers.append("Vitesse du vent (km/h)")
+        
+        # Ecrire les en-têtes
+        writer.writerow(headers)
 
+        for data in ville:
+            try:
+                # Construire la ligne de données en fonction des options choisies
+                row = [data[0], data[1]]  # Ville, Date
+                if param[0]:
+                    row.append(data[2])  # Température
+                if param[1]:
+                    row.append(data[3])  # Humidité
+                if param[2]:
+                    row.append(data[4])  # Vitesse du vent
+                
+                # Ecrire les données
+                writer.writerow(row)
+            
+            except IndexError:
+                print(f"Erreur : les données pour {data[0]} ne sont pas complètes.")
 
 def afficher_avignon_en_gros():
     print("""
@@ -319,10 +328,13 @@ def traiter_arguments():
     villes = []
     #       [default,temp,hum,wind]
     param = [False,False,False,False]
+    ifcsv = False
     i = 0
     if len(args) == 0:
         villes.append([lire_ville_defaut(),None,None,None,'v'])
     while i < len(args):
+        if args[i] == "-csv":
+            ifcsv = True
         if args[i] == '-temp':
             if param[0] == False: param[0] = True
             param[1] = True
@@ -369,22 +381,25 @@ def traiter_arguments():
         else:
             i += 1
 
-    return villes, param
+    return villes, param, ifcsv
 
 if __name__ == "__main__":
-    villes, param = traiter_arguments()
+    villes, param, ifcsv = traiter_arguments()
     tab = traitement(villes)
-    for info in tab:
-        if isinstance(info, str):
-            print(info)
-        else:
-            if(info[1] == "aujourd'hui"):
-                print(f"\nMétéo actuelle pour {info[0]} aujourd'hui:")
+    if ifcsv:
+        afficher_meteo_csv(tab,param)
+    else:
+        for info in tab:
+            if isinstance(info, str):
+                print(info)
             else:
-                print(f"\nMétéo actuelle pour {info[0]} le {info[1]}:")
-            if(param[0] == False or param[1] == True):
-                print(f"Température : {info[2]} °C")
-            if(param[0] == False or param[2] == True):
-                print(f"Humidité : {info[3]} %")
-            if(param[0] == False or param[3] == True):
-                print(f"Vitesse du vent : {info[4]} m/h")
+                if(info[1] == "aujourd'hui"):
+                    print(f"\nMétéo actuelle pour {info[0]} aujourd'hui:")
+                else:
+                    print(f"\nMétéo actuelle pour {info[0]} le {info[1]}:")
+                if(param[0] == False or param[1] == True):
+                    print(f"Température : {info[2]} °C")
+                if(param[0] == False or param[2] == True):
+                    print(f"Humidité : {info[3]} %")
+                if(param[0] == False or param[3] == True):
+                    print(f"Vitesse du vent : {info[4]} m/h")
