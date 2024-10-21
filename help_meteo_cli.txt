@@ -1,0 +1,40 @@
+===================================================================================================================
+                                       AIDE - METEO CLI
+===================================================================================================================
+
+Utilisation :
+-------------
+python meteo.py [OPTION] [ARGUMENTS]
+
+Options :
+---------
+- -help                       Affiche ce message d'aide.
+- sans arguments              Affiche la météo pour la ville par défaut
+- -v ville                    Affiche la météo actuelle pour la ville donnée.-
+- -c LAT:LON                  Affiche la météo actuelle basée sur des coordonnées GPS (latitude et longitude).
+- -d AAAA-MM-JJ               Affiche les prévisions météo pour une date spécifique à 12h.
+- -p AAAA-MM-JJ AAAA-MM-JJ    Affiche les prévisions météo pour la plage de dates donnée
+
+
+Exemples :
+----------
+1. Afficher ce message d'aide :
+   python meteo.py -help
+
+2. Météo actuelle pour Paris :
+   python meteo.py -v Paris
+
+3. Prévision météo pour Paris à une date spécifique (2024-10-01 à 12h) :
+   python meteo.py -v Paris -d 2024-10-01
+
+4. Météo actuelle en utilisant des coordonnées GPS (latitude 48.8566, longitude 2.3522) :
+   python meteo.py -c 48.8566:2.3522
+
+5. Prévisions météo pour Paris pour une plage de date spécifique (du 2024-10-21 au 2024-10-26) :
+   pyhton meteo.py -v Paris -p 2024-10-21 2024-10-26
+
+6. Prévisions météo pour plusieurs villes :
+   python meteo.py -v Paris -v Marseille
+===================================================================================================================
+                                       AIDE - METEO CLI
+===================================================================================================================

@@ -228,6 +228,13 @@ def traitement(villes_tableau):
             print("Choix invalide. Veuillez entrer 'villes' ou 'coordonnées'.")
     return returnTab
 
+def afficher_aide():
+    try:
+        with open('help_meteo_cli.txt', 'r', encoding='utf-8') as file:
+            aide_contenu = file.read()
+            print(aide_contenu)
+    except FileNotFoundError:
+        print("Erreur : Le fichier d'aide help est introuvable.")
 
 # Fonction principale pour gérer les argument
 
@@ -237,6 +244,8 @@ def traiter_arguments():
     i = 0
 
     while i < len(args):
+        if args[i] == '-help':
+            afficher_aide()
         if args[i] == '-v':
             ville_info = [None, None, None, None, 'v']
             ville_info[0] = args[i + 1]
@@ -286,4 +295,3 @@ if __name__ == "__main__":
             print(f"Température : {info[2]} °C")
             print(f"Humidité : {info[3]} %")
             print(f"Vitesse du vent : {info[4]} m/h")
-
