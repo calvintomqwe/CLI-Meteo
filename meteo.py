@@ -2,10 +2,34 @@ import requests
 import sys
 import datetime
 
-# Fonction pour obtenir la météo actuelle
-def get_meteo_actuelle(ville=None):
+
+# requête API pour récupérer les données météo
+def get_meteo(ville=None):
     api_key = "657d085c1641acc8912db3f95ecd21b3"
     url = f"http://api.openweathermap.org/data/2.5/weather?q={ville}&units=metric&lang=fr&appid={api_key}"
+
+    try:
+        response = requests.get(url)
+        response.raise_for_status()  # vérifie si la requête a échoué
+        data = response.json()
+
+        if data.get('cod') != 200:
+            print(
+                f"Erreur : {data.get('message', 'Données météo non disponibles')}."
+            )
+            return None
+
+        return data
+    except requests.exceptions.RequestException:
+        print("Erreur : Impossible de récupérer les données météo.")
+        return None
+
+# requete API pour récupérer les données météo avec coordonnées GPS
+
+
+def get_meteo_gps(lat, lon):
+    api_key = "657d085c1641acc8912db3f95ecd21b3"
+    url = f"http://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&units=metric&lang=fr&appid={api_key}"
     
     try:
         response = requests.get(url)
@@ -20,6 +44,62 @@ def get_meteo_actuelle(ville=None):
     except requests.exceptions.RequestException:
         print("Erreur : Impossible de récupérer les données météo.")
         return None
+
+
+
+
+# Afficher 
+def afficher_meteo_A(ville):
+
+    data = get_meteo(ville)
+
+    if data:
+        informationGenerale = data["main"]["temp"]
+        description = data["weather"][0]["description"]
+        temperature = data["main"]["temp"]
+        humidite = data["main"]["humidity"]
+        vitesseVent = data["wind"]["speed"]
+        directionVent = data["wind"]["deg"]
+
+
+        #retourner un tableau avec les informations météo
+        meteo = [ville, informationGenerale, temperature, humidite, vitesseVent, directionVent]
+        return meteo
+    
+    else:
+        print(f"Les données météo pour {ville} ne sont pas disponibles. Veuillez vérifier le nom de la ville.")
+        return None
+
+
+# Afficher la météo avec les coordonnées GPS
+
+def afficher_meteo_gps_A(lat, lon):
+    data = get_meteo_gps(lat, lon)
+    
+    if data:
+        informationGenerale = data["weather"][0]["description"]
+        temperature = data["main"]["temp"]
+        humidite = data["main"]["humidity"]
+        vitesseVent = data["wind"]["speed"]
+        directionVent = data["wind"]["deg"]
+        nomVille = data["name"]
+
+        #retourner un tableau avec les informations météo
+        meteo = [nomVille, informationGenerale, temperature, humidite, vitesseVent, directionVent]
+        return meteo
+
+    else:
+        print(f"Les données météo pour la position ({lat}, {lon}) ne sont pas disponibles. Veuillez vérifier les coordonnées GPS.")
+        return None
+
+
+
+def afficher_meteo_date(ville, date):
+    print(f"Affichage des données météo pour {ville} à la date {date}")
+
+
+
+
 
 # Fonction pour obtenir les prévisions à 5 jours
 def get_forecast(ville=None):
@@ -76,16 +156,17 @@ def get_meteo_by_date(ville=None, date_str=None):
 def afficher_meteo_si_date(ville, date_str=None):
     if date_str:
         forecast = get_meteo_by_date(ville, date_str)
-        if isinstance(forecast, dict):
+        if isinstance(forecast, dict) and len(forecast)>0:
             print(f"\nPrévisions météo pour {ville} le {date_str} à 12h :")
-            print(f"Description : {forecast['weather'][0]['description']}")
-            print(f"Température : {forecast['main']['temp']} °C")
-            print(f"Humidité : {forecast['main']['humidity']} %")
-            print(f"Vitesse du vent : {forecast['wind']['speed'] * 3.6} km/h")
+            for element in forecast:
+                print(f"Description : {forecast['weather'][0]['description']}")
+                print(f"Température : {element['temperature']} °C")
+                print(f"Humidité : {forecast['main']['humidity']} %")
+                print(f"Vitesse du vent : {forecast['wind']['speed'] * 3.6} km/h")
         else:
             print(forecast)
     else:
-        data = get_meteo_actuelle(ville)
+        data = get_meteo(ville)
         if data:
             print(f"\nMétéo actuelle pour {ville}:")
             print(f"Description : {data['weather'][0]['description']}")
@@ -94,11 +175,20 @@ def afficher_meteo_si_date(ville, date_str=None):
             print(f"Vitesse du vent : {data['wind']['speed'] * 3.6} km/h")
         else:
             print(f"Les données météo pour {ville} ne sont pas disponibles.")
+def afficher_aide():
+    try:
+        with open('help_meteo_cli.txt', 'r', encoding='utf-8') as file:
+            aide_contenu = file.read()
+            print(aide_contenu)
+    except FileNotFoundError:
+        print("Erreur : Le fichier d'aide help est introuvable.")
 
 # Fonction principale pour gérer les arguments
 def main():
     ville_defaut = "Avignon"
-    
+    if '-help' in sys.argv:  # Si l'utilisateur passe l'option -aide
+        afficher_aide()
+        sys.exit()
     # Récupérer les arguments passés en ligne de commande
     args = sys.argv[1:]
     
